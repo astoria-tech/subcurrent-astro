@@ -5,5 +5,5 @@
   "snippet": "<p>In the <a class=\"reference external\" href=\"/post/cardos-writing-an-os-for-the-cardputer.html\">\"CardOS: Writing an OS for the Cardputer\" post</a> I shared about the OS that I'm writing for the\nCardputer and that the next step was to move away from the Arduino toolchain. It\ntook me two months but I finally did it. The end product was <a class=\"reference external\" href=\"https://codeberg.org/nfraprado/cardOS/commit/85553f797cf0877e4c88a8e549052a445d00e7d1\">this commit …</a></p>",
   "author": "Nicolas F. R. A. Prado",
   "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-22T22:06:26.059Z"
+  "lastFetched": "2025-02-22T22:31:20.963Z"
 }

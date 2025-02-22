@@ -5,5 +5,5 @@
   "snippet": "<p>For a long time I used <a class=\"reference external\" href=\"https://www.offlineimap.org/\">offlineimap</a> to synchronize my emails between the email\nproviders and my computer. Having access to all my emails offline on my computer\nis pretty handy. But after seeing the <a class=\"reference external\" href=\"https://people.kernel.org/mcgrof/replacing-offlineimap-with-mbsync\">brutal efficiency advantage of mbsync\nover offlineimap</a>, and having had delay issues with offlineimap myself …</p>",
   "author": "Nicolas F. R. A. Prado",
   "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-22T22:06:26.072Z"
+  "lastFetched": "2025-02-22T22:31:20.980Z"
 }
