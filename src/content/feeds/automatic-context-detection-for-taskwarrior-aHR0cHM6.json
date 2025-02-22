@@ -1,0 +1,9 @@
+{
+  "title": "Automatic context detection for Taskwarrior",
+  "link": "https://nfraprado.net/post/automatic-context-detection-for-taskwarrior.html",
+  "pubDate": "2020-08-24T03:00:00.000Z",
+  "snippet": "<p>One of the main ideas of <a class=\"reference external\" href=\"https://en.wikipedia.org/wiki/Getting_Things_Done\">GTD</a> is to have a context associated with each task, so\nthat it is very easy to see which tasks can be done in your current context. I\norganize my tasks with <a class=\"reference external\" href=\"https://taskwarrior.org/\">Taskwarrior</a>, so to make it work with contexts, when\nadding a new …</p>",
+  "author": "Nicolas F. R. A. Prado",
+  "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
+  "lastFetched": "2025-02-22T22:06:26.072Z"
+}

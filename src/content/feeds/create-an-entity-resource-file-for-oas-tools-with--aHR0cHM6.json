@@ -1,0 +1,9 @@
+{
+  "title": "Create an entity resource file for OAS Tools with Prisma",
+  "link": "https://www.ashryan.io/create-an-entity-resource-file-for-oas-tools-with-prisma/",
+  "pubDate": "2022-11-08T00:18:28.000Z",
+  "snippet": "Make an entity resource file with Prisma that can be used with OAS Tools to generate an Open API document and a Node.js/Express server.",
+  "author": "Ash Ryan Arnwine",
+  "feedSource": "https://www.ashryan.io/rss/",
+  "lastFetched": "2025-02-22T22:06:25.350Z"
+}

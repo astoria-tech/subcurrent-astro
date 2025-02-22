@@ -1,0 +1,9 @@
+{
+  "title": "Number sorting gotcha with JavaScript",
+  "link": "https://www.ashryan.io/number-sorting-gotcha-with-javascript/",
+  "pubDate": "2020-11-22T16:27:35.000Z",
+  "snippet": "Problem: Sorted arrays are coming back in an unexpected order... sometimes. Safari is behaving differently than Chrome and Node.js. Let’s look at what to do.",
+  "author": "Ash Ryan Arnwine",
+  "feedSource": "https://www.ashryan.io/rss/",
+  "lastFetched": "2025-02-22T22:06:25.351Z"
+}

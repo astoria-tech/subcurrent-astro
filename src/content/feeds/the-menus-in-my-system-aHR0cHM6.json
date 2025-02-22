@@ -1,0 +1,9 @@
+{
+  "title": "The menus in my system",
+  "link": "https://nfraprado.net/post/the-menus-in-my-system.html",
+  "pubDate": "2021-12-28T03:00:00.000Z",
+  "snippet": "<p>Another post going through stuff I set up for my desktop environment a couple\nyears ago and that have used ever since 🙂. This time I'll show the menus I've\ncreated using <a class=\"reference external\" href=\"https://github.com/davatorium/rofi\">rofi</a>.</p>\n<p>So, what is <a class=\"reference external\" href=\"https://github.com/davatorium/rofi\">rofi</a>? It's basically a program where you feed a list of options to\nit, and …</p>",
+  "author": "Nicolas F. R. A. Prado",
+  "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
+  "lastFetched": "2025-02-22T22:06:26.065Z"
+}

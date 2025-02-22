@@ -1,0 +1,9 @@
+{
+  "title": "Streaming LLM responses vs blocking LLM responses with Ollama and Node.js",
+  "link": "https://www.youtube.com/watch?v=iH9wcLFrrXk",
+  "pubDate": "2024-09-25T19:52:00.000Z",
+  "snippet": "Live streamed on September 12, 2024.\n\nWe're using Ollama and Node.js to look at the code-level differences between steaming LLM responses and blocking on synchronous responses. Best of all since it's Ollama, the LLMs we look at—like Llama 3.1 and Tiny Llama—are running locally.\n\nGet Ollama here: https://ollama.com\n\nOllama API docs are here: https://github.com/ollama/ollama/blob/main/docs/api.md",
+  "author": "meremortaldev",
+  "feedSource": "https://www.youtube.com/feeds/videos.xml?channel_id=UCjkzTpA7V8AfJS9UKLKFZxA",
+  "lastFetched": "2025-02-22T22:06:25.303Z"
+}

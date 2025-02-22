@@ -1,0 +1,9 @@
+{
+  "title": "Blog customizations",
+  "link": "https://nfraprado.net/post/blog-customizations.html",
+  "pubDate": "2021-07-24T03:00:00.000Z",
+  "snippet": "<p>I've been using <a class=\"reference external\" href=\"https://github.com/getpelican/pelican/\">pelican</a> as my static blog generator since I started this blog\nabout one year ago. It only took a bit of configuration to get the blog up and\nrunning, and a bit of searching through <a class=\"reference external\" href=\"http://pelicanthemes.com/\">pelicanthemes</a> to find <a class=\"reference external\" href=\"https://github.com/gunchu/nikhil-theme\">nikhil-theme</a>\nwhich is the theme I'm still using.</p>\n<p>While …</p>",
+  "author": "Nicolas F. R. A. Prado",
+  "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
+  "lastFetched": "2025-02-22T22:06:26.066Z"
+}
