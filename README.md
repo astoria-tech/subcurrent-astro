@@ -139,7 +139,6 @@ npm run build
 ### Performance
 
 - [ ] Incremental feed updates
-- [ ] Parallel feed fetching
 - [ ] Feed content caching
 - [ ] Rate limiting for feed fetches
 
@@ -147,12 +146,9 @@ npm run build
 
 - [ ] Feed validation tools
 - [ ] Better error reporting
-- [ ] Development mode with mock feeds
 - [ ] Testing utilities
 
 ### Deployment
 
-- [ ] Docker container
+- [ ] Periodic content fetching
 - [ ] Automated backups
-- [ ] Health check endpoints
-- [ ] Monitoring dashboard
