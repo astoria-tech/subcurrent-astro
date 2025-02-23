@@ -1,9 +1,0 @@
-{
-  "title": "Setting up mbsync to work with XOAUTH2",
-  "link": "https://nfraprado.net/post/setting-up-mbsync-to-work-with-xoauth2.html",
-  "pubDate": "2020-07-30T03:00:00.000Z",
-  "snippet": "<p>For a long time I used <a class=\"reference external\" href=\"https://www.offlineimap.org/\">offlineimap</a> to synchronize my emails between the email\nproviders and my computer. Having access to all my emails offline on my computer\nis pretty handy. But after seeing the <a class=\"reference external\" href=\"https://people.kernel.org/mcgrof/replacing-offlineimap-with-mbsync\">brutal efficiency advantage of mbsync\nover offlineimap</a>, and having had delay issues with offlineimap myself …</p>",
-  "author": "Nicolas F. R. A. Prado",
-  "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-23T00:04:35.310Z"
-}

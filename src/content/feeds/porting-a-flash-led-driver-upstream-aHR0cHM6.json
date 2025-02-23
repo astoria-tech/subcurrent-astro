@@ -1,9 +1,0 @@
-{
-  "title": "Porting a flash LED driver upstream",
-  "link": "https://nfraprado.net/post/porting-a-flash-led-driver-upstream.html",
-  "pubDate": "2020-11-20T03:00:00.000Z",
-  "snippet": "<p>Now that I had a working serial cable for my Nexus 5, as described in the\n<a class=\"reference external\" href=\"/post/making-an-uart-cable-for-the-nexus-5.html\">\"Making an UART cable for the Nexus 5\" post</a>, I was ready to face some action and help in\nupstreaming.</p>\n<p>Looking through <a class=\"reference external\" href=\"https://masneyb.github.io/nexus-5-upstream/TODO.html\">Brian Masney's TODO page</a> there were a couple options, but the\none …</p>",
-  "author": "Nicolas F. R. A. Prado",
-  "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-23T00:04:35.308Z"
-}

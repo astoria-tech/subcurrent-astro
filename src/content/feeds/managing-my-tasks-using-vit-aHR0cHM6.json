@@ -1,9 +1,0 @@
-{
-  "title": "Managing my tasks using VIT",
-  "link": "https://nfraprado.net/post/managing-my-tasks-using-vit.html",
-  "pubDate": "2020-12-22T03:00:00.000Z",
-  "snippet": "<p>Two years ago I decided to get more organized about my life. During that time I\nread the <a class=\"reference external\" href=\"https://en.wikipedia.org/wiki/Getting_Things_Done\">Getting Things Done</a> book and discovered <a class=\"reference external\" href=\"https://taskwarrior.org/\">Taskwarrior</a>, a task\nmanager for the terminal which doesn't get in the way.</p>\n<p>I greatly appreciated Taskwarrior's simplicity and customizability, but after\nsome time, the need …</p>",
-  "author": "Nicolas F. R. A. Prado",
-  "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-23T00:04:35.308Z"
-}
