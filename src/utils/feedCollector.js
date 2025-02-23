@@ -14,6 +14,9 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
+import { exec } from "node:child_process";
+const execAsync = promisify(exec);
 
 // Helper function to create a safe filename
 function createSafeFilename(url, title) {
@@ -138,96 +141,136 @@ function isSubstackURL(url) {
 // Helper function for delay
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Helper function to fetch Substack feeds using curl
+async function fetchWithCurl(url) {
+  try {
+    console.log(`[curl] Starting curl request for ${url}`);
+    console.log("[curl] Using filtered grep to handle large responses");
+
+    // Add grep to filter out just the essential XML parts and limit the content size
+    const cmd = `curl -s -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" \
+      -H "Accept: application/rss+xml, application/xml, text/xml, application/atom+xml" \
+      -H "Accept-Language: en-US,en;q=0.9" \
+      -H "Cache-Control: no-cache" \
+      -H "Pragma: no-cache" \
+      -H "Sec-Fetch-Dest: document" \
+      -H "Sec-Fetch-Mode: navigate" \
+      -H "Sec-Fetch-Site: none" \
+      -H "Sec-Fetch-User: ?1" \
+      --connect-timeout 20 \
+      --max-time 30 \
+      --retry 3 \
+      --retry-delay 5 \
+      --retry-max-time 60 \
+      -v \
+      "${url}" 2>&1 | tee >(grep "^*" >&2) | grep -E "(<item>|</item>|<title>|</title>|<link>|</link>|<pubDate>|</pubDate>|<description>|</description>)"`;
+
+    console.log("[curl] Executing curl command with grep filtering");
+    const { stdout, stderr } = await execAsync(cmd, {
+      maxBuffer: 10 * 1024 * 1024,
+    }); // 10MB buffer
+
+    if (stderr) {
+      console.log("[curl] Curl debug output:", stderr);
+    }
+
+    console.log(`[curl] Received ${stdout.length} bytes of filtered content`);
+
+    // Count matched tags to verify content
+    const tagCounts = {
+      items: (stdout.match(/<item>/g) || []).length,
+      titles: (stdout.match(/<title>/g) || []).length,
+      links: (stdout.match(/<link>/g) || []).length,
+      dates: (stdout.match(/<pubDate>/g) || []).length,
+    };
+    console.log("[curl] Found tags:", tagCounts);
+
+    // Reconstruct minimal valid XML
+    const result = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>${stdout}</channel></rss>`;
+    console.log("[curl] Successfully reconstructed XML document");
+
+    return result;
+  } catch (error) {
+    console.error("[curl] Curl command failed:", error);
+    console.error("[curl] Full error details:", {
+      message: error.message,
+      code: error.code,
+      stdout: error.stdout?.slice(0, 500),
+      stderr: error.stderr?.slice(0, 500),
+    });
+    throw new Error(`Curl failed: ${error.message}`);
+  }
+}
+
 // Helper function to get feed content (RSS or Atom)
 async function getFeedXML(url, retries = 3) {
   const isSubstack = isSubstackURL(url);
+  console.log(
+    `\n[feed] Processing ${isSubstack ? "Substack" : "standard"} feed: ${url}`
+  );
+  console.log(`[feed] Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`[feed] Platform: ${process.platform}`);
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(
-        `\nAttempting to fetch: ${url} (attempt ${attempt}/${retries})${
+        `\n[feed] Attempt ${attempt}/${retries} for ${url}${
           isSubstack ? " [Substack]" : ""
         }`
       );
 
-      // Base headers
-      const headers = {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-        Accept:
-          "application/rss+xml, application/xml, text/xml, application/atom+xml, text/html;q=0.9, */*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
-        DNT: "1",
-      };
-
-      // Add extra headers for Substack
+      let text;
       if (isSubstack) {
-        Object.assign(headers, {
-          Referer: new URL(url).origin,
-          Origin: new URL(url).origin,
-          "sec-ch-ua":
-            '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-          "sec-ch-ua-mobile": "?0",
-          "sec-ch-ua-platform": '"macOS"',
-          "Sec-Fetch-Dest": "document",
-          "Sec-Fetch-Mode": "navigate",
-          "Sec-Fetch-Site": "same-origin",
-          "Sec-Fetch-User": "?1",
-          "Upgrade-Insecure-Requests": "1",
-        });
-      }
+        console.log("[feed] Using curl strategy for Substack");
+        text = await fetchWithCurl(url);
+      } else {
+        console.log("[feed] Using fetch strategy for standard feed");
+        // Base headers
+        const headers = {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+          Accept:
+            "application/rss+xml, application/xml, text/xml, application/atom+xml, text/html;q=0.9, */*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Accept-Encoding": "gzip, deflate, br",
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+          DNT: "1",
+        };
 
-      // Add a longer initial delay for Substack
-      if (isSubstack && attempt === 1) {
-        console.log("Adding initial delay for Substack...");
-        await delay(3000);
-      }
-
-      const response = await fetch(url, { headers });
-
-      console.log(`Response status: ${response.status}`);
-      console.log(
-        "Response headers:",
-        Object.fromEntries(response.headers.entries())
-      );
-
-      // Special handling for Cloudflare and Substack
-      const needsDelay =
-        response.headers.get("server")?.toLowerCase().includes("cloudflare") ||
-        isSubstack;
-
-      if (needsDelay) {
-        const delayTime = isSubstack ? 5000 * attempt : 2000 * attempt;
+        const response = await fetch(url, { headers });
+        console.log(`Response status: ${response.status}`);
         console.log(
-          `Adding ${delayTime}ms delay for ${
-            isSubstack ? "Substack" : "Cloudflare"
-          }...`
+          "Response headers:",
+          Object.fromEntries(response.headers.entries())
         );
-        await delay(delayTime);
-      }
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch feed: ${response.status} ${response.statusText}`
-        );
-      }
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch feed: ${response.status} ${response.statusText}`
+          );
+        }
 
-      const text = await response.text();
+        text = await response.text();
+      }
 
       // Log more details for Substack feeds
       if (isSubstack) {
-        console.log("Substack response first 1000 chars:", text.slice(0, 1000));
+        console.log("[feed] Substack response sample:", text.slice(0, 1000));
+        console.log("[feed] Response length:", text.length);
+        console.log("[feed] Contains XML declaration:", text.includes("<?xml"));
+        console.log("[feed] Contains RSS root:", text.includes("<rss"));
+        console.log("[feed] Contains items:", text.includes("<item>"));
       }
 
       if (text.includes("captcha") || text.includes("challenge-form")) {
+        console.warn("[feed] Challenge/captcha detected in response");
         throw new Error("Challenge form detected");
       }
 
-      console.log(`Received content length: ${text.length} bytes`);
+      console.log(`[feed] Received content length: ${text.length} bytes`);
       if (text.length < 100) {
+        console.warn("[feed] Response too short:", text);
         throw new Error("Response too short, likely invalid");
       }
 
@@ -237,14 +280,19 @@ async function getFeedXML(url, retries = 3) {
         !text.includes("<rss") &&
         !text.includes("<feed")
       ) {
+        console.warn(
+          "[feed] Invalid feed format. Response starts with:",
+          text.slice(0, 200)
+        );
         throw new Error("Response is not valid XML/RSS/Atom");
       }
 
-      console.log("Raw feed sample:", text.slice(0, 500));
+      console.log("[feed] Raw feed sample:", text.slice(0, 500));
 
       // Simple XML parsing to get the entries
       const entries = [];
       const isRSS = text.includes("<rss");
+      console.log(`[feed] Detected format: ${isRSS ? "RSS" : "Atom"}`);
 
       // Match either RSS items or Atom entries
       const itemRegex = isRSS
@@ -254,25 +302,36 @@ async function getFeedXML(url, retries = 3) {
 
       for (const match of matches) {
         const entry = parseEntry(match[1], isRSS);
-        console.log("Parsed feed entry:", {
+        console.log("[feed] Parsed entry:", {
           title: entry.title,
           published: entry.published,
+          hasLink: !!entry.link,
+          descriptionLength: entry.description?.length || 0,
         });
         entries.push(entry);
       }
 
+      console.log(`[feed] Successfully parsed ${entries.length} entries`);
       return { entries };
     } catch (error) {
-      console.error(`Attempt ${attempt}/${retries} failed:`, error.message);
+      console.error(
+        `[feed] Attempt ${attempt}/${retries} failed:`,
+        error.message
+      );
+      console.error("[feed] Error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
 
       if (attempt === retries) {
-        console.error("All retry attempts failed");
+        console.error("[feed] All retry attempts failed");
         return { entries: [] };
       }
 
       // Exponential backoff
       const backoff = Math.min(1000 * Math.pow(2, attempt), 10000);
-      console.log(`Waiting ${backoff}ms before retry...`);
+      console.log(`[feed] Waiting ${backoff}ms before retry...`);
       await delay(backoff);
     }
   }

@@ -31,6 +31,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test Substack feeds
+        run: |
+          echo "Testing Substack feeds with curl..."
+          curl -v -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" \
+               -H "Accept: application/rss+xml, application/xml, text/xml, application/atom+xml" \
+               -H "Accept-Language: en-US,en;q=0.9" \
+               -H "Cache-Control: no-cache" \
+               -H "Pragma: no-cache" \
+               -H "Sec-Fetch-Dest: document" \
+               -H "Sec-Fetch-Mode: navigate" \
+               -H "Sec-Fetch-Site: none" \
+               -H "Sec-Fetch-User: ?1" \
+               --connect-timeout 20 \
+               --max-time 30 \
+               --retry 3 \
+               --retry-delay 5 \
+               --retry-max-time 60 \
+               https://theunderlying.substack.com/feed > substack_test.xml
+          echo "Substack feed content:"
+          cat substack_test.xml
+
       - name: Fetch new feeds
         run: |
           # Add delay between retries
