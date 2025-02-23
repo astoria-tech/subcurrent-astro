@@ -15,6 +15,12 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max-http-header-size=16384"
+      # Add these to help with feed fetching
+      UV_THREADPOOL_SIZE: "64"
+      FETCH_RETRY_COUNT: "5"
+      FETCH_TIMEOUT: "30000"
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +32,10 @@ jobs:
         run: npm ci
 
       - name: Fetch new feeds
-        run: npm run refresh
+        run: |
+          # Add delay between retries
+          sleep 3
+          npm run refresh
 
       - name: Configure Git
         run: |

@@ -130,30 +130,63 @@ function parseEntry(entry, isRSS) {
   }
 }
 
+// Helper function to check if a URL is from Substack
+function isSubstackURL(url) {
+  return url.includes("substack.com");
+}
+
 // Helper function for delay
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Helper function to get feed content (RSS or Atom)
 async function getFeedXML(url, retries = 3) {
+  const isSubstack = isSubstackURL(url);
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(
-        `\nAttempting to fetch: ${url} (attempt ${attempt}/${retries})`
+        `\nAttempting to fetch: ${url} (attempt ${attempt}/${retries})${
+          isSubstack ? " [Substack]" : ""
+        }`
       );
 
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-          Accept:
-            "application/rss+xml, application/xml, text/xml, application/atom+xml, text/html;q=0.9, */*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.5",
-          "Accept-Encoding": "gzip, deflate, br",
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-          DNT: "1",
-        },
-      });
+      // Base headers
+      const headers = {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        Accept:
+          "application/rss+xml, application/xml, text/xml, application/atom+xml, text/html;q=0.9, */*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        DNT: "1",
+      };
+
+      // Add extra headers for Substack
+      if (isSubstack) {
+        Object.assign(headers, {
+          Referer: new URL(url).origin,
+          Origin: new URL(url).origin,
+          "sec-ch-ua":
+            '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"macOS"',
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "same-origin",
+          "Sec-Fetch-User": "?1",
+          "Upgrade-Insecure-Requests": "1",
+        });
+      }
+
+      // Add a longer initial delay for Substack
+      if (isSubstack && attempt === 1) {
+        console.log("Adding initial delay for Substack...");
+        await delay(3000);
+      }
+
+      const response = await fetch(url, { headers });
 
       console.log(`Response status: ${response.status}`);
       console.log(
@@ -161,12 +194,19 @@ async function getFeedXML(url, retries = 3) {
         Object.fromEntries(response.headers.entries())
       );
 
-      // Special handling for Cloudflare responses
-      if (
-        response.headers.get("server")?.toLowerCase().includes("cloudflare")
-      ) {
-        console.log("Cloudflare detected, adding extra delay...");
-        await delay(2000 * attempt); // Progressive delay for Cloudflare
+      // Special handling for Cloudflare and Substack
+      const needsDelay =
+        response.headers.get("server")?.toLowerCase().includes("cloudflare") ||
+        isSubstack;
+
+      if (needsDelay) {
+        const delayTime = isSubstack ? 5000 * attempt : 2000 * attempt;
+        console.log(
+          `Adding ${delayTime}ms delay for ${
+            isSubstack ? "Substack" : "Cloudflare"
+          }...`
+        );
+        await delay(delayTime);
       }
 
       if (!response.ok) {
@@ -177,8 +217,13 @@ async function getFeedXML(url, retries = 3) {
 
       const text = await response.text();
 
+      // Log more details for Substack feeds
+      if (isSubstack) {
+        console.log("Substack response first 1000 chars:", text.slice(0, 1000));
+      }
+
       if (text.includes("captcha") || text.includes("challenge-form")) {
-        throw new Error("Cloudflare challenge detected");
+        throw new Error("Challenge form detected");
       }
 
       console.log(`Received content length: ${text.length} bytes`);
@@ -243,13 +288,25 @@ async function getFeedXML(url, retries = 3) {
 export async function getFeedContent(feed) {
   try {
     console.log("Fetching feed:", feed.url);
+    const isSubstack = isSubstackURL(feed.url);
+
+    if (isSubstack) {
+      console.log("Processing Substack feed with extra care");
+    }
 
     const feedData = await getFeedXML(feed.url);
     const entries = feedData.entries || [];
-    console.log("Found entries:", entries.length);
+    console.log(
+      `Found ${entries.length} entries${isSubstack ? " from Substack" : ""}`
+    );
 
     if (entries.length === 0) {
-      console.warn("No entries found in feed:", feed.url);
+      console.warn(`No entries found in feed: ${feed.url}`);
+      if (isSubstack) {
+        console.warn(
+          "This is a Substack feed - might need manual investigation"
+        );
+      }
       return [];
     }
 
@@ -294,6 +351,10 @@ export async function getFeedContent(feed) {
     return processedEntries;
   } catch (error) {
     console.error(`Error processing feed ${feed.url}:`, error);
+    if (isSubstackURL(feed.url)) {
+      console.error("Substack feed failed - this might need special handling");
+      console.error("Full error:", error.stack);
+    }
     return [];
   }
 }
