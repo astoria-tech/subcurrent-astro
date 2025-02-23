@@ -5,5 +5,5 @@
   "snippet": "<p>One interesting feature of <a class=\"reference external\" href=\"https://github.com/getpelican/pelican\">Pelican</a>, the static site generator I use for this\nblog, is the internal link expansion syntax with <code class=\"docutils literal\">{}</code>. It is documented\n<a class=\"reference external\" href=\"https://docs.getpelican.com/en/latest/content.html?highlight=static#linking-to-internal-content\">here</a>. Some examples are <code class=\"docutils literal\">{filename}</code>, <code class=\"docutils literal\">{static}</code> and <code class=\"docutils literal\">{author}</code>. The\npurpose of the syntax is to have shorter and easier aliases to link to internal\ncontent in …</p>",
   "author": "Nicolas F. R. A. Prado",
   "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-22T22:31:20.971Z"
+  "lastFetched": "2025-02-23T00:00:06.243Z"
 }

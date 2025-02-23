@@ -5,5 +5,5 @@
   "snippet": "<p>My file manager of choice is <a class=\"reference external\" href=\"https://ranger.github.io/\">ranger</a>. It's terminal-based, provides keybind\nmapping for everything making me more efficient in navigating my files, and it's\nincredibly extensible by enabling the creation of custom commands in <strong>python</strong>.\nIf that wasn't enough, it also has a ton of other great features (extensible\nfile …</p>",
   "author": "Nicolas F. R. A. Prado",
   "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-22T22:31:20.980Z"
+  "lastFetched": "2025-02-23T00:00:06.249Z"
 }
