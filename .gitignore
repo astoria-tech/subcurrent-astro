@@ -24,4 +24,5 @@ pnpm-debug.log*
 .idea/
 
 # feeds
-src/content/feeds/*
+src/content/feeds/*.json
+!src/content/feeds/.gitkeep
