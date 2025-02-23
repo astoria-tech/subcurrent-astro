@@ -5,6 +5,7 @@ import tailwind from "@astrojs/tailwind";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://YOUR_GITHUB_USERNAME.github.io",
+  site: "https://astoria-tech.github.io",
+  base: "/subcurrent-astro",
   integrations: [react(), tailwind()],
 });
