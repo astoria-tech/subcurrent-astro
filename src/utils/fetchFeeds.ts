@@ -4,26 +4,27 @@ import { getFeedContent } from "./feedCollector.js";
 async function main() {
   console.log("Starting feed fetch...");
 
-  try {
-    const results = await Promise.all(
-      feeds.map(async (feed) => {
-        console.log(`\nFetching feed: ${feed.url}`);
-        const entries = await getFeedContent(feed);
-        return {
-          feed,
-          count: entries.length,
-        };
-      })
-    );
+  const results = [];
 
-    console.log("\nFeed fetch summary:");
-    for (const result of results) {
-      console.log(`${result.feed.authorName}: ${result.count} entries`);
+  // Process feeds sequentially to avoid overwhelming servers
+  for (const feed of feeds) {
+    try {
+      console.log(`\nProcessing feed: ${feed.url}`);
+      const entries = await getFeedContent(feed);
+      results.push({ feed, count: entries.length });
+    } catch (error) {
+      console.error(`Failed to process feed ${feed.url}:`, error);
+      results.push({ feed, count: 0 });
     }
-  } catch (error) {
-    console.error("Error fetching feeds:", error);
-    process.exit(1);
+  }
+
+  console.log("\nFeed fetch summary:");
+  for (const result of results) {
+    console.log(`${result.feed.authorName}: ${result.count} entries`);
   }
 }
 
-main();
+main().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});

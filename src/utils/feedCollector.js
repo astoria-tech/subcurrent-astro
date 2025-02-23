@@ -130,36 +130,109 @@ function parseEntry(entry, isRSS) {
   }
 }
 
+// Helper function for delay
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Helper function to get feed content (RSS or Atom)
-async function getFeedXML(url) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch feed: ${response.status} ${response.statusText}`
-    );
+async function getFeedXML(url, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(
+        `\nAttempting to fetch: ${url} (attempt ${attempt}/${retries})`
+      );
+
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+          Accept:
+            "application/rss+xml, application/xml, text/xml, application/atom+xml, text/html;q=0.9, */*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Accept-Encoding": "gzip, deflate, br",
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+          DNT: "1",
+        },
+      });
+
+      console.log(`Response status: ${response.status}`);
+      console.log(
+        "Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
+
+      // Special handling for Cloudflare responses
+      if (
+        response.headers.get("server")?.toLowerCase().includes("cloudflare")
+      ) {
+        console.log("Cloudflare detected, adding extra delay...");
+        await delay(2000 * attempt); // Progressive delay for Cloudflare
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch feed: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const text = await response.text();
+
+      if (text.includes("captcha") || text.includes("challenge-form")) {
+        throw new Error("Cloudflare challenge detected");
+      }
+
+      console.log(`Received content length: ${text.length} bytes`);
+      if (text.length < 100) {
+        throw new Error("Response too short, likely invalid");
+      }
+
+      // Validate it's actually XML/RSS/Atom
+      if (
+        !text.includes("<?xml") &&
+        !text.includes("<rss") &&
+        !text.includes("<feed")
+      ) {
+        throw new Error("Response is not valid XML/RSS/Atom");
+      }
+
+      console.log("Raw feed sample:", text.slice(0, 500));
+
+      // Simple XML parsing to get the entries
+      const entries = [];
+      const isRSS = text.includes("<rss");
+
+      // Match either RSS items or Atom entries
+      const itemRegex = isRSS
+        ? /<item>(.*?)<\/item>/gs
+        : /<entry>(.*?)<\/entry>/gs;
+      const matches = text.matchAll(itemRegex);
+
+      for (const match of matches) {
+        const entry = parseEntry(match[1], isRSS);
+        console.log("Parsed feed entry:", {
+          title: entry.title,
+          published: entry.published,
+        });
+        entries.push(entry);
+      }
+
+      return { entries };
+    } catch (error) {
+      console.error(`Attempt ${attempt}/${retries} failed:`, error.message);
+
+      if (attempt === retries) {
+        console.error("All retry attempts failed");
+        return { entries: [] };
+      }
+
+      // Exponential backoff
+      const backoff = Math.min(1000 * Math.pow(2, attempt), 10000);
+      console.log(`Waiting ${backoff}ms before retry...`);
+      await delay(backoff);
+    }
   }
 
-  const text = await response.text();
-  console.log("Raw feed sample:", text.slice(0, 500));
-
-  // Simple XML parsing to get the entries
-  const entries = [];
-  const isRSS = text.includes("<rss");
-
-  // Match either RSS items or Atom entries
-  const itemRegex = isRSS ? /<item>(.*?)<\/item>/gs : /<entry>(.*?)<\/entry>/gs;
-  const matches = text.matchAll(itemRegex);
-
-  for (const match of matches) {
-    const entry = parseEntry(match[1], isRSS);
-    console.log("Parsed feed entry:", {
-      title: entry.title,
-      published: entry.published,
-    });
-    entries.push(entry);
-  }
-
-  return { entries };
+  return { entries: [] };
 }
 
 /**
