@@ -5,5 +5,5 @@
   "snippet": "Live streamed on September 10, 2024.\n\nHere are a few resources I created while I was playing around with EmbedJS for RAG:\n\nRAG in Node.js with EmbedJS\n- Blog: https://www.ashryan.io/rag-in-node-js-with-embedjs/\n- Repo: https://github.com/ashryanbeats/embedjs-rag\n\nBatch loading resources in EmbedJS for RAG\n- Blog: https://www.ashryan.io/batch-loading-resources-in-embedjs-for-rag/\n- Repo: https://github.com/ashryanbeats/embedjs-rag-web\n\nYou can get EmbedJS on GitHub here:\nhttps://github.com/llm-tools/embedJs?ref=ashryan.io",
   "author": "meremortaldev",
   "feedSource": "https://www.youtube.com/feeds/videos.xml?channel_id=UCjkzTpA7V8AfJS9UKLKFZxA",
-  "lastFetched": "2025-02-23T00:00:04.943Z"
+  "lastFetched": "2025-02-23T00:04:34.409Z"
 }

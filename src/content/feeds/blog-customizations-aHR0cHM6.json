@@ -5,5 +5,5 @@
   "snippet": "<p>I've been using <a class=\"reference external\" href=\"https://github.com/getpelican/pelican/\">pelican</a> as my static blog generator since I started this blog\nabout one year ago. It only took a bit of configuration to get the blog up and\nrunning, and a bit of searching through <a class=\"reference external\" href=\"http://pelicanthemes.com/\">pelicanthemes</a> to find <a class=\"reference external\" href=\"https://github.com/gunchu/nikhil-theme\">nikhil-theme</a>\nwhich is the theme I'm still using.</p>\n<p>While …</p>",
   "author": "Nicolas F. R. A. Prado",
   "feedSource": "https://nfraprado.net/feeds/all.atom.xml",
-  "lastFetched": "2025-02-23T00:00:06.246Z"
+  "lastFetched": "2025-02-23T00:04:35.306Z"
 }
