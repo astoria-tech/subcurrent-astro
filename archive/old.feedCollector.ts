@@ -1,4 +1,4 @@
-import type { Feed } from "../data/feeds.ts";
+import type { Feed } from "../src/data/feeds.ts";
 import { getCollection } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import fs from "node:fs/promises";
