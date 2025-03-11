@@ -19,4 +19,8 @@ export const feeds = [
     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCjkzTpA7V8AfJS9UKLKFZxA",
     authorName: "meremortaldev",
   },
+  {
+    url: "https://www.chrisdeluca.me",
+    authorName: "Chris DeLuca",
+  }
 ];
