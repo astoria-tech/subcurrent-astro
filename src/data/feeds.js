@@ -20,7 +20,7 @@ export const feeds = [
     authorName: "meremortaldev",
   },
   {
-    url: "https://www.chrisdeluca.me",
+    url: "https://www.chrisdeluca.me/feed.xml",
     authorName: "Chris DeLuca",
   }
 ];
