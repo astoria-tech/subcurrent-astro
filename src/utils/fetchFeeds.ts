@@ -1,5 +1,5 @@
 import { feeds } from "../data/feeds.js";
-import { getFeedContent } from "./feedCollector.js";
+import { getFeedContent } from "./feedCollector.ts";
 
 async function main() {
   console.log("Starting feed fetch...");

@@ -1,10 +1,36 @@
-import type { Feed } from "../data/feeds";
-import { getCollection } from "astro:content";
-import type { CollectionEntry } from "astro:content";
+/**
+ * Feed interface definition
+ */
+export interface Feed {
+  url: string;
+  authorName: string;
+}
+
+/**
+ * FeedEntry interface definition
+ */
+export interface FeedEntry {
+  title: string;
+  link: string;
+  published: string;
+  description: string;
+}
+
+/**
+ * ProcessedEntry interface for the final output
+ */
+export interface ProcessedEntry {
+  title: string;
+  link: string;
+  pubDate: string;
+  snippet: string;
+  author: string;
+  feedSource: string;
+  lastFetched: string;
+}
+
 import fs from "node:fs/promises";
 import path from "node:path";
-
-type FeedEntry = CollectionEntry<"feeds">;
 
 // Helper function to create a safe filename
 function createSafeFilename(url: string, title: string): string {
@@ -18,183 +44,184 @@ function createSafeFilename(url: string, title: string): string {
 }
 
 // Helper function to parse and validate dates
-function parseDate(dateStr: string | undefined): string {
+function parseDate(dateStr: string): string {
   if (!dateStr) return new Date().toISOString();
-
-  console.log("Raw date string:", dateStr);
-
-  // Parse the date
   const date = new Date(dateStr);
-  const now = new Date();
+  return !isNaN(date.getTime()) ? date.toISOString() : new Date().toISOString();
+}
 
-  console.log("Date parsing:", {
-    input: dateStr,
-    parsed: date.toISOString(),
-    now: now.toISOString(),
-  });
+// Helper function to clean XML content
+function cleanXMLContent(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
+}
 
-  // Check if the date is valid
-  if (isNaN(date.getTime())) {
-    console.error("Invalid date:", dateStr);
-    return now.toISOString();
+// Helper function to extract content using regex
+function extractContent(entry: string, pattern: RegExp): string {
+  const match = entry.match(pattern);
+  return match ? cleanXMLContent(match[1]) : "";
+}
+
+// Helper function to parse an XML entry
+function parseEntry(entry: string, isRSS: boolean): FeedEntry {
+  try {
+    const title = extractContent(entry, /<title[^>]*>(.*?)<\/title>/s);
+    const link = isRSS
+      ? extractContent(entry, /<link>(.*?)<\/link>/)
+      : entry.match(/<link[^>]*href="([^"]*)"[^>]*>/)?.[1] || "";
+    const published =
+      entry.match(
+        /<(?:pubDate|published|updated|date)[^>]*>(.*?)<\/(?:pubDate|published|updated|date)>/
+      )?.[1] || "";
+    const description = extractContent(
+      entry,
+      /<(?:description|content|summary)[^>]*>(.*?)<\/(?:description|content|summary)>/s
+    );
+
+    return { title, link, published, description };
+  } catch (error) {
+    console.error("Error parsing entry:", error);
+    return { title: "", link: "", published: "", description: "" };
   }
-
-  // Ensure the date is not in the future
-  if (date > now) {
-    console.log("Future date detected:", {
-      date: date.toISOString(),
-      now: now.toISOString(),
-    });
-    return now.toISOString();
-  }
-
-  return date.toISOString();
 }
 
 // Helper function to get feed content (RSS or Atom)
-async function getFeedXML(url: string): Promise<any> {
-  const response = await fetch(url);
-  const text = await response.text();
+async function getFeedXML(url: string): Promise<string> {
+  console.log(`Fetching feed: ${url}`);
 
-  console.log("Raw feed sample:", text.slice(0, 500));
+  const headers = {
+    Accept:
+      "application/rss+xml, application/xml, text/xml, application/atom+xml",
+    "User-Agent":
+      "Subcurrent Feed Reader (https://github.com/astoria-tech/subcurrent-astro)",
+  };
 
-  // Simple XML parsing to get the entries
-  const entries: any[] = [];
-  const isRSS = text.includes("<rss");
-
-  // Match either RSS items or Atom entries
-  const itemRegex = isRSS ? /<item>(.*?)<\/item>/gs : /<entry>(.*?)<\/entry>/gs;
-  const matches = text.matchAll(itemRegex);
-
-  for (const match of matches) {
-    const entry = match[1];
-    const title = entry.match(/<title[^>]*>(.*?)<\/title>/)?.[1] || "";
-    const link = isRSS
-      ? entry.match(/<link>(.*?)<\/link>/)?.[1]
-      : entry.match(/<link.*?href="(.*?)".*?>/)?.[1] || "";
-    const published =
-      entry.match(
-        /<pubDate>(.*?)<\/pubDate>|<published>(.*?)<\/published>/
-      )?.[1] || "";
-    const description =
-      entry.match(
-        /<description>(.*?)<\/description>|<content.*?>(.*?)<\/content>|<media:description>(.*?)<\/media:description>/
-      )?.[1] || "";
-
-    console.log("Parsed feed entry:", {
-      title,
-      published,
-    });
-
-    entries.push({
-      title,
-      link,
-      published,
-      description,
-    });
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch feed: ${response.status} ${response.statusText}`
+    );
   }
 
-  return { entries };
+  const text = await response.text();
+  if (!text.includes("<rss") && !text.includes("<feed")) {
+    throw new Error("Response is not a valid RSS/Atom feed");
+  }
+
+  return text;
 }
 
-export async function getFeedContent(feed: Feed) {
-  try {
-    console.log("Fetching feed:", feed.url);
+/**
+ * Preprocesses HTML snippets to fix common issues before storage
+ * @param html - The HTML content to preprocess
+ * @returns The preprocessed HTML content
+ */
+function preprocessHtmlSnippet(html: string): string {
+  if (!html) return "";
 
-    // Try to get existing entries
-    const existingEntries = await getCollection("feeds", (entry: FeedEntry) => {
-      return entry.data.feedSource === feed.url;
-    });
-
-    console.log("Existing entries:", existingEntries.length);
-
-    // Check if we need to update (older than 6 hours)
-    const needsUpdate =
-      !existingEntries.length ||
-      existingEntries.some((entry) => {
-        const lastFetched = new Date(entry.data.lastFetched);
-        const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
-        return lastFetched < sixHoursAgo;
-      });
-
-    console.log("Need update:", needsUpdate);
-
-    if (needsUpdate) {
-      console.log("Fetching new content for:", feed.url);
-      const feedData = await getFeedXML(feed.url);
-      const entries = feedData.entries || [];
-      console.log("Found entries:", entries.length);
-
-      const feedsDir = path.join(process.cwd(), "src/content/feeds");
-
-      // Ensure the feeds directory exists
-      await fs.mkdir(feedsDir, { recursive: true });
-
-      // Process each entry
-      const processedEntries = [];
-      for (const entry of entries) {
-        const entryData = {
-          title: entry.title || "Untitled",
-          link: entry.link || "",
-          pubDate: parseDate(entry.published),
-          snippet: entry.description || "",
-          author: feed.authorName,
-          feedSource: feed.url,
-          lastFetched: new Date().toISOString(),
-        };
-
-        // Create a unique filename for this entry
-        const filename = createSafeFilename(
-          entry.link || feed.url,
-          entryData.title
-        );
-        const filePath = path.join(feedsDir, filename);
-
-        console.log("Writing entry:", {
-          title: entryData.title,
-          file: filename,
-        });
-
-        // Write the entry to a JSON file
-        await fs.writeFile(filePath, JSON.stringify(entryData, null, 2));
-        processedEntries.push(entryData);
-      }
-
-      // Clean up old entries for this feed
-      const files = await fs.readdir(feedsDir);
-      console.log("Total files in directory:", files.length);
-
-      for (const file of files) {
-        const filePath = path.join(feedsDir, file);
-        try {
-          const content = JSON.parse(await fs.readFile(filePath, "utf-8"));
-          if (
-            content.feedSource === feed.url &&
-            !processedEntries.find((e) => e.link === content.link)
-          ) {
-            console.log("Removing old entry:", file);
-            await fs.unlink(filePath);
-          }
-        } catch (err) {
-          console.error(`Error processing file ${file}:`, err);
+  // Clean up quotes in URLs and other common issues
+  return (
+    html
+      // Remove excessive newlines and spaces
+      .replace(/\s+/g, " ")
+      // Fix URLs in img tags - handle various quote styles
+      .replace(
+        /<img[^>]*src=\\?("|')(.*?)\\?("|')[^>]*>/gi,
+        (match, q1, url) => {
+          // Clean the URL by removing any trailing quotes or entities
+          const cleanUrl = url
+            .replace(/&quot;/g, "")
+            .replace(/\\"/g, "")
+            .replace(/["']+$/g, "")
+            .replace(/\/["']+/g, "/");
+          return `<img src="${cleanUrl}">`;
         }
-      }
+      )
+      // Fix URLs in a tags
+      .replace(
+        /<a[^>]*href=\\?("|')(.*?)\\?("|')[^>]*>/gi,
+        (match, q1, url, q2, offset, original) => {
+          // Extract other attributes like class, title, etc.
+          const attrs = match.match(/\s(\w+)=\\?("|')(.*?)\\?("|')/g) || [];
+          const cleanAttrs = attrs
+            .filter((attr) => !attr.startsWith(" href="))
+            .map((attr) => attr.replace(/=\\?("|')(.*?)\\?("|')/g, '="$2"'))
+            .join("");
 
-      return processedEntries;
+          // Clean the URL
+          const cleanUrl = url
+            .replace(/&quot;/g, "")
+            .replace(/\\"/g, "")
+            .replace(/["']+$/g, "")
+            .replace(/\/["']+/g, "/");
+
+          return `<a href="${cleanUrl}"${cleanAttrs}>`;
+        }
+      )
+      // Remove script tags and their content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+      // Truncate if too long (prevents excessively long snippets)
+      .substring(0, 2000)
+  );
+}
+
+/**
+ * Fetches and processes feed content
+ * @param feed - The feed to process
+ * @returns The processed entries
+ */
+export async function getFeedContent(feed: Feed): Promise<ProcessedEntry[]> {
+  try {
+    const text = await getFeedXML(feed.url);
+    const isRSS = text.includes("<rss");
+
+    // Match either RSS items or Atom entries
+    const itemRegex = isRSS
+      ? /<item>(.*?)<\/item>/gs
+      : /<entry>(.*?)<\/entry>/gs;
+    const matches = text.matchAll(itemRegex);
+    const entries: ProcessedEntry[] = [];
+
+    for (const match of matches) {
+      const entry = parseEntry(match[1], isRSS);
+      if (!entry.title) continue;
+
+      const entryData: ProcessedEntry = {
+        title: entry.title,
+        link: entry.link || "",
+        pubDate: parseDate(entry.published),
+        snippet: preprocessHtmlSnippet(entry.description) || "",
+        author: feed.authorName,
+        feedSource: feed.url,
+        lastFetched: new Date().toISOString(),
+      };
+
+      entries.push(entryData);
     }
 
-    return existingEntries.map((entry) => entry.data);
+    console.log(`Found ${entries.length} entries in ${feed.url}`);
+
+    // Save entries to files
+    const feedsDir = path.join(process.cwd(), "src/content/feeds");
+    await fs.mkdir(feedsDir, { recursive: true });
+
+    for (const entry of entries) {
+      const filename = createSafeFilename(entry.link || feed.url, entry.title);
+      const filePath = path.join(feedsDir, filename);
+      await fs.writeFile(filePath, JSON.stringify(entry, null, 2));
+    }
+
+    return entries;
   } catch (error) {
-    console.error(`Error fetching ${feed.url}:`, error);
+    console.error(`Error processing feed ${feed.url}:`, error);
     return [];
   }
-}
-
-// Helper function to get description from YouTube feed items
-function getYouTubeDescription(entry: any): string {
-  return (
-    entry["media:group"]?.["media:description"]?.[0] ||
-    entry.description ||
-    "No description available."
-  );
 }
