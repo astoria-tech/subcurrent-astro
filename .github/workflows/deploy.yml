@@ -49,7 +49,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
 
-      # New step for Discord notifications - runs after deployment
+      # Discord notifications - runs after deployment
       - name: Send Discord notifications for new RSS items
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -81,9 +81,12 @@ jobs:
           # Run the Discord notifier with error handling
           node --loader ts-node/esm src/utils/discordNotifier.ts || echo "Discord notification failed but continuing workflow"
 
-          # Commit the discord-sent-posts.json file back to the repository
-          if [ -f "discord-sent-posts.json" ]; then
-            echo "Committing discord-sent-posts.json back to the repository"
-            git add discord-sent-posts.json
-            git diff --staged --quiet || (git commit -m "Update discord-sent-posts.json" && git push)
+          # Commit the Discord notification tracking file
+          echo "Looking for Discord timestamp tracking file..."
+          if [ -f ".discord-sent-posts.json" ]; then
+            echo "Found tracking file: .discord-sent-posts.json"
+            git add .discord-sent-posts.json
+            git diff --staged --quiet || (git commit -m "Update Discord notification tracking data" && git push)
+          else
+            echo "Warning: .discord-sent-posts.json file not found after running Discord notifier"
           fi
