@@ -1,7 +1,7 @@
 name: Deploy
 on:
   schedule:
-    - cron: "0 */6 * * *" # Every 6 hours
+    - cron: '0 */6 * * *' # Every 6 hours
   push:
     branches: [main]
   workflow_dispatch: # Manual trigger
@@ -16,13 +16,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      NODE_OPTIONS: "--max-http-header-size=16384"
+      NODE_OPTIONS: '--max-http-header-size=16384'
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
@@ -53,9 +53,10 @@ jobs:
       - name: Send Discord notifications for new RSS items
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          RSS_FEED_URL: "https://ashryanarnwine.github.io/subcurrent-astro/rss.xml"
+          RSS_FEED_URL: 'https://astoria-tech.github.io/subcurrent-astro/rss.xml'
         run: |
-          # Allow some time for the deployment to finish and the RSS feed to be available
-          sleep 60
-          # Run the Discord notifier
-          node --loader ts-node/esm src/utils/discordNotifier.ts
+          # Allow more time for the deployment to finish and the RSS feed to be available
+          echo "Waiting for GitHub Pages deployment to complete (3 minutes)..."
+          sleep 180
+          # Run the Discord notifier with error handling
+          node --loader ts-node/esm src/utils/discordNotifier.ts || echo "Discord notification failed but continuing workflow"
