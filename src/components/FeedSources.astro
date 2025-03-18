@@ -1,9 +1,9 @@
 ---
-import { feeds, type Feed } from "../data/feeds";
+import { feeds, type Feed } from '../data/feeds';
 
 function getDomain(url: string): string {
   try {
-    return new URL(url).hostname.replace("www.", "");
+    return new URL(url).hostname.replace('www.', '');
   } catch {
     return url;
   }
@@ -13,18 +13,12 @@ function getDomain(url: string): string {
 <div
   class="rounded-2xl border border-dark-border p-8 bg-dark-surface bg-gradient-radial from-dark-surface to-dark-bg"
 >
-  <h2
-    class="text-sm uppercase tracking-wider text-content-muted font-medium mb-6"
-  >
-    Feed Sources
-  </h2>
+  <h2 class="text-sm uppercase tracking-wider text-content-muted font-medium mb-6">Feed Sources</h2>
   <ul class="space-y-6">
     {
       feeds.map((feed: Feed) => (
         <li>
-          <div class="text-content-primary font-medium mb-1">
-            {feed.authorName}
-          </div>
+          <div class="text-content-primary font-medium mb-1">{feed.authorName}</div>
           <a
             href={feed.url}
             class="text-content-muted hover:text-accent-primary transition-colors text-sm"

@@ -1,8 +1,8 @@
-import { feeds } from "../data/feeds.js";
-import { getFeedContent } from "./feedCollector.ts";
+import { feeds } from '../data/feeds.js';
+import { getFeedContent } from './feedCollector.ts';
 
 async function main() {
-  console.log("Starting feed fetch...");
+  console.log('Starting feed fetch...');
 
   const results = [];
 
@@ -18,13 +18,13 @@ async function main() {
     }
   }
 
-  console.log("\nFeed fetch summary:");
+  console.log('\nFeed fetch summary:');
   for (const result of results) {
     console.log(`${result.feed.authorName}: ${result.count} entries`);
   }
 }
 
 main().catch((error) => {
-  console.error("Fatal error:", error);
+  console.error('Fatal error:', error);
   process.exit(1);
 });

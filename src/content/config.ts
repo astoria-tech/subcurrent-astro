@@ -1,8 +1,8 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection, z } from 'astro:content';
 
 // Define the schema for our feed entries
 const feedsCollection = defineCollection({
-  type: "data",
+  type: 'data',
   schema: z.object({
     title: z.string(),
     link: z.string().url(),

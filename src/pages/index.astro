@@ -1,39 +1,35 @@
 ---
-import { getCollection } from "astro:content";
-import type { CollectionEntry } from "astro:content";
-import FeedSources from "../components/FeedSources.astro";
-import { sanitizeHtml } from "../utils/sanitizeHtml";
+import { getCollection } from 'astro:content';
+import FeedSources from '../components/FeedSources.astro';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 
 // Helper function to format dates consistently
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   return {
-    full: date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "America/New_York", // Using NY timezone since it's for Astoria
+    full: date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'America/New_York', // Using NY timezone since it's for Astoria
     }),
-    time: date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone: "America/New_York",
+    time: date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/New_York',
     }),
   };
 }
 
 // One more sanitization step specifically for image URLs
 function fixImageUrls(htmlContent: string): string {
-  if (!htmlContent) return "";
+  if (!htmlContent) return '';
 
   // We'll use a direct replacement strategy against the most problematic patterns
   return (
     htmlContent
       // First, directly replace image tags with problematic URL patterns
-      .replace(
-        /<img[^>]*src="([^"]*?)&quot;\/(.*?)"[^>]*>/g,
-        '<img src="$1$2">'
-      )
+      .replace(/<img[^>]*src="([^"]*?)&quot;\/(.*?)"[^>]*>/g, '<img src="$1$2">')
       .replace(/<img[^>]*src="&quot;([^"]*?)(\/|)"[^>]*>/g, '<img src="$1">')
       .replace(/<img[^>]*src="([^"]*?)&quot;(\/|)"[^>]*>/g, '<img src="$1">')
       // Then use a more targeted approach for any remaining issues
@@ -51,12 +47,10 @@ function fixImageUrls(htmlContent: string): string {
 }
 
 // Get all entries
-const entries = await getCollection("feeds");
+const entries = await getCollection('feeds');
 const allPosts = entries
   .map((entry) => entry.data)
-  .sort(
-    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
-  );
+  .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
 // Group posts by date
 const groupedPosts = allPosts.reduce(
@@ -76,10 +70,7 @@ const groupedPosts = allPosts.reduce(
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <meta
-      name="description"
-      content="A content aggregator for the Astoria Tech Meetup"
-    />
+    <meta name="description" content="A content aggregator for the Astoria Tech Meetup" />
     <title>Subcurrent | Astoria Tech Meetup</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -194,9 +185,7 @@ const groupedPosts = allPosts.reduce(
                         <div class="flex items-center gap-2 text-xs text-content-muted">
                           <span>{post.author}</span>
                           <span class="w-1 h-1 rounded-full bg-dark-border" />
-                          <time datetime={post.pubDate}>
-                            {formatDate(post.pubDate).time}
-                          </time>
+                          <time datetime={post.pubDate}>{formatDate(post.pubDate).time}</time>
                         </div>
                       </article>
                     </a>
@@ -247,7 +236,7 @@ const groupedPosts = allPosts.reduce(
       }
 
       main a:focus {
-        outline: 2px solid theme("colors.accent.primary");
+        outline: 2px solid theme('colors.accent.primary');
         border-radius: 8px;
       }
 
@@ -256,18 +245,18 @@ const groupedPosts = allPosts.reduce(
       }
 
       main a:focus-visible {
-        outline: 2px solid theme("colors.accent.primary");
+        outline: 2px solid theme('colors.accent.primary');
         border-radius: 8px;
       }
 
       /* Ensure proper text color for sanitized HTML content */
       :global(.sanitized-content) {
-        color: theme("colors.content.secondary") !important;
+        color: theme('colors.content.secondary') !important;
         padding-bottom: 1rem; /* pb-4 equivalent */
       }
 
       :global(.sanitized-content *) {
-        color: theme("colors.content.secondary") !important;
+        color: theme('colors.content.secondary') !important;
         font-family: inherit !important;
       }
 
@@ -301,17 +290,17 @@ const groupedPosts = allPosts.reduce(
       }
 
       ::-webkit-scrollbar-track {
-        background: theme("colors.dark.bg");
+        background: theme('colors.dark.bg');
       }
 
       ::-webkit-scrollbar-thumb {
-        background: theme("colors.dark.border");
-        border: 4px solid theme("colors.dark.bg");
+        background: theme('colors.dark.border');
+        border: 4px solid theme('colors.dark.bg');
         border-radius: 8px;
       }
 
       ::-webkit-scrollbar-thumb:hover {
-        background: theme("colors.accent.muted");
+        background: theme('colors.accent.muted');
       }
     </style>
   </body>
