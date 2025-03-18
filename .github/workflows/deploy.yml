@@ -1,7 +1,7 @@
 name: Deploy
 on:
   schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
+    - cron: '0 */3 * * *' # Every 3 hours
   push:
     branches: [main]
   workflow_dispatch: # Manual trigger
@@ -55,8 +55,35 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           RSS_FEED_URL: 'https://astoria-tech.github.io/subcurrent-astro/rss.xml'
         run: |
-          # Allow more time for the deployment to finish and the RSS feed to be available
-          echo "Waiting for GitHub Pages deployment to complete (3 minutes)..."
-          sleep 180
+          # Check if the RSS feed is available, with a timeout
+          max_attempts=30
+          attempt=0
+          echo "Checking for RSS feed availability..."
+
+          while [ $attempt -lt $max_attempts ]; do
+            attempt=$((attempt+1))
+            http_status=$(curl -s -o /dev/null -w "%{http_code}" $RSS_FEED_URL)
+            
+            if [ "$http_status" == "200" ]; then
+              echo "RSS feed is available! Proceeding with Discord notifications."
+              break
+            else
+              echo "Attempt $attempt: RSS feed not yet available (HTTP status: $http_status). Waiting..."
+              sleep 10
+            fi
+            
+            # If we've reached max attempts, continue anyway
+            if [ $attempt -eq $max_attempts ]; then
+              echo "Warning: RSS feed could not be verified after maximum attempts. Proceeding anyway."
+            fi
+          done
+
           # Run the Discord notifier with error handling
           node --loader ts-node/esm src/utils/discordNotifier.ts || echo "Discord notification failed but continuing workflow"
+
+          # Commit the discord-sent-posts.json file back to the repository
+          if [ -f "discord-sent-posts.json" ]; then
+            echo "Committing discord-sent-posts.json back to the repository"
+            git add discord-sent-posts.json
+            git diff --staged --quiet || (git commit -m "Update discord-sent-posts.json" && git push)
+          fi
