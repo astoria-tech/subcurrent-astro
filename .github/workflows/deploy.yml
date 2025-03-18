@@ -48,3 +48,14 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+
+      # New step for Discord notifications - runs after deployment
+      - name: Send Discord notifications for new RSS items
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RSS_FEED_URL: "https://ashryanarnwine.github.io/subcurrent-astro/rss.xml"
+        run: |
+          # Allow some time for the deployment to finish and the RSS feed to be available
+          sleep 60
+          # Run the Discord notifier
+          node --loader ts-node/esm src/utils/discordNotifier.ts

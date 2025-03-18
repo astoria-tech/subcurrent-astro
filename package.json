@@ -8,8 +8,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "clean": "rm -rf src/content/feeds/*",
-    "fetch": "astro sync && node --loader ts-node/esm src/utils/fetchFeeds.ts",
-    "refresh": "npm run clean && npm run fetch"
+    "fetch": "astro sync && NODE_NO_WARNINGS=1 node --loader ts-node/esm src/utils/fetchFeeds.ts",
+    "refresh": "npm run clean && npm run fetch",
+    "notify-discord": "NODE_NO_WARNINGS=1 node --loader ts-node/esm src/utils/discordNotifier.ts"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",
@@ -19,6 +20,7 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "astro": "^5.3.0",
+    "dotenv": "^16.4.7",
     "isomorphic-dompurify": "^2.22.0",
     "lucide-react": "^0.479.0",
     "react": "^19.0.0",
