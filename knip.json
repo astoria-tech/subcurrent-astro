@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/**/*.{ts,tsx,astro}"],
+  "project": ["src/**/*.{ts,tsx,astro}"],
+  "ignoreDependencies": [
+    "@astrojs/react",
+    "@astrojs/tailwind",
+    "@astrojs/rss",
+    "@types/react-dom",
+    "lucide-react",
+    "react-dom"
+  ],
+  "ignoreBinaries": [],
+  "astro": {
+    "entry": ["src/pages/**/*.astro", "src/layouts/**/*.astro"]
+  },
+  "eslint": {
+    "config": ".eslintrc.json"
+  }
+}

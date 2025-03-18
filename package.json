@@ -13,13 +13,13 @@
     "notify-discord": "NODE_NO_WARNINGS=1 node --loader ts-node/esm src/utils/discordNotifier.ts",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.astro",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix",
-    "lint:clean": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix && prettier --write 'src/**/*.{ts,tsx,astro,js,jsx}'"
+    "lint:clean": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix && prettier --write 'src/**/*.{ts,tsx,astro,js,jsx}'",
+    "knip": "knip"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",
     "@astrojs/rss": "^4.0.11",
     "@astrojs/tailwind": "^5.1.0",
-    "@extractus/feed-extractor": "^7.1.4",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "astro": "^5.3.0",
@@ -30,18 +30,20 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.13.5",
+    "@types/node": "^22.13.10",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
+    "astro-eslint-parser": "^1.2.1",
     "eslint": "^8.56.0",
     "eslint-plugin-astro": "^0.33.1",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
+    "knip": "^5.46.0",
     "prettier": "^3.2.5",
     "prettier-plugin-astro": "^0.13.0",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.8.2"
   }
 }
