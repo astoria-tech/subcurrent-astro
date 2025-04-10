@@ -2,8 +2,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
+import DOMPurify from 'isomorphic-dompurify';
+import { XMLParser } from 'fast-xml-parser';
 
-// Load environment variables from .env file
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '../..');
 dotenv.config({ path: path.join(rootDir, '.env') });
@@ -24,13 +25,13 @@ if (!DISCORD_WEBHOOK_URL) {
       'When running locally, make sure you have a .env file with DISCORD_WEBHOOK_URL set.'
   );
 }
-
 interface RssItem {
   title: string;
   link: string;
   pubDate: string;
   description?: string;
   author?: string;
+  imageUrl?: string;
 }
 
 interface PostsTracker {
@@ -38,24 +39,33 @@ interface PostsTracker {
   latestTimestamp: string;
 }
 
+interface DiscordEmbed {
+  title: string;
+  url: string;
+  description: string;
+  color: number;
+  timestamp: string;
+  footer: {
+    text: string;
+  };
+  image?: {
+    url: string;
+  };
+}
+
 // Helper function to properly decode HTML entities and clean content
 function sanitizeContent(html: string): string {
   if (!html) return '';
 
-  // First decode HTML entities
-  const decoded = html
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&#39;/g, "'");
-
-  // Then strip all HTML tags
-  const stripped = decoded.replace(/<[^>]*>/g, '');
+  // Use DOMPurify's sanitize function to safely parse the HTML
+  // This automatically handles all HTML entities properly
+  const sanitized = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [], // No tags allowed, we just want text
+    ALLOWED_ATTR: [], // No attributes allowed
+  });
 
   // Trim excess whitespace
-  return stripped.replace(/\s+/g, ' ').trim();
+  return sanitized.replace(/\s+/g, ' ').trim();
 }
 
 async function loadPostsTracker(): Promise<PostsTracker> {
@@ -68,6 +78,9 @@ async function loadPostsTracker(): Promise<PostsTracker> {
     };
   } catch (error) {
     // File doesn't exist or is invalid, start with empty tracker
+    console.log('State file not found or invalid. Creating a new tracker.');
+    console.log('Note: MAX_NOTIFICATIONS setting will limit initial notifications to:', MAX_NOTIFICATIONS);
+    
     return {
       sentPosts: [],
       latestTimestamp: '1970-01-01T00:00:00.000Z',
@@ -87,34 +100,105 @@ async function fetchRss(): Promise<RssItem[]> {
     throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
   }
 
-  // Simple XML parsing
   const content = await response.text();
-  const items: RssItem[] = [];
 
-  // Extract items from RSS feed
-  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-  let match;
+  // Configure XML parser with appropriate options to handle RSS feeds
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    isArray: (name) => name === 'item', // Ensure items are always treated as an array
+    // Preserve CDATA content
+    cdataPropName: '__cdata',
+    // Handle whitespace
+    preserveOrder: false,
+    trimValues: true,
+    parseTagValue: true,
+  });
 
-  while ((match = itemRegex.exec(content)) !== null) {
-    const itemContent = match[1];
+  try {
+    const result = parser.parse(content);
+    const items: RssItem[] = [];
 
-    // Extract fields for each item
-    const title = itemContent.match(/<title>(.*?)<\/title>/)?.[1] || '';
-    const link = itemContent.match(/<link>(.*?)<\/link>/)?.[1] || '';
-    const pubDate = itemContent.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
-    const author = itemContent.match(/<author>(.*?)<\/author>/)?.[1] || '';
-    const description = itemContent.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '';
+    // Check if we have valid RSS structure
+    if (!result.rss || !result.rss.channel) {
+      console.warn('RSS feed does not have expected structure');
+      return [];
+    }
 
-    items.push({
-      title: title.trim(),
-      link: link.trim(),
-      pubDate: pubDate.trim(),
-      author: author.trim(),
-      description: description.trim(),
-    });
+    // Extract items from RSS feed - handle both array and single item cases
+    const rssItems = result.rss.channel.item || [];
+
+    for (const item of rssItems) {
+      // Extract and decode fields
+      // Handle both direct values and CDATA wrapped content
+      const getField = (field: string): string => {
+        if (!item[field]) return '';
+
+        // Handle CDATA wrapped content
+        if (item[field].__cdata) return item[field].__cdata;
+
+        // Handle direct text
+        return item[field].toString();
+      };
+
+      const title = getField('title');
+      const link = getField('link');
+      const pubDate = getField('pubDate');
+      const author = getField('author') || getField('dc:creator');
+      const description = getField('description');
+
+      // Extract image URL using various common RSS patterns
+      let imageUrl = '';
+
+      // Try media:content
+      if (item['media:content'] && item['media:content']['@_url']) {
+        imageUrl = item['media:content']['@_url'];
+      }
+      // Try media:thumbnail
+      else if (item['media:thumbnail'] && item['media:thumbnail']['@_url']) {
+        imageUrl = item['media:thumbnail']['@_url'];
+      }
+      // Try enclosure (podcasts and some blogs)
+      else if (
+        item.enclosure &&
+        item.enclosure['@_url'] &&
+        item.enclosure['@_type'] &&
+        item.enclosure['@_type'].startsWith('image/')
+      ) {
+        imageUrl = item.enclosure['@_url'];
+      }
+      // Try image tag directly
+      else if (item.image && item.image.url) {
+        imageUrl = item.image.url;
+      }
+      // Try itunes:image
+      else if (item['itunes:image'] && item['itunes:image']['@_href']) {
+        imageUrl = item['itunes:image']['@_href'];
+      }
+      // If no image found in standard tags, try to extract from description
+      else if (description) {
+        const imgMatch = description.match(/<img[^>]+src="([^">]+)"/i);
+        if (imgMatch && imgMatch[1]) {
+          imageUrl = imgMatch[1];
+        }
+      }
+
+      items.push({
+        title: title.trim(),
+        link: link.trim(),
+        pubDate: pubDate.trim(),
+        author: author.trim(),
+        description: description.trim(),
+        imageUrl: imageUrl.trim(),
+      });
+    }
+
+    return items;
+  } catch (error) {
+    console.error('Error parsing RSS feed:', error);
+    // Fallback to returning an empty array
+    return [];
   }
-
-  return items;
 }
 
 async function sendToDiscord(item: RssItem): Promise<void> {
@@ -131,23 +215,43 @@ async function sendToDiscord(item: RssItem): Promise<void> {
     const cleanDescription = item.description ? sanitizeContent(item.description) : '';
 
     // Create a rich embed for Discord
+    const embed: DiscordEmbed = {
+      title: cleanTitle,
+      url: item.link,
+      description: cleanDescription
+        ? cleanDescription.length > 200
+          ? cleanDescription.substring(0, 200) + '...'
+          : cleanDescription
+        : 'Read more at the link',
+      color: 0x3498db, // Blue color
+      timestamp: new Date(item.pubDate).toISOString(),
+      footer: {
+        text: `Posted by ${item.author || '(author not provided)'}`,
+      },
+    };
+
+    // Add image if available
+    if (item.imageUrl) {
+      // Validate image URL
+      const isValidUrl = (url: string): boolean => {
+        try {
+          new URL(url);
+          return url.startsWith('http://') || url.startsWith('https://');
+        } catch (e) {
+          return false;
+        }
+      };
+
+      if (isValidUrl(item.imageUrl)) {
+        embed.image = {
+          url: item.imageUrl,
+        };
+        console.log(`Including image: ${item.imageUrl}`);
+      }
+    }
+
     const payload = {
-      embeds: [
-        {
-          title: cleanTitle,
-          url: item.link,
-          description: cleanDescription
-            ? cleanDescription.length > 200
-              ? cleanDescription.substring(0, 200) + '...'
-              : cleanDescription
-            : 'Read more at the link',
-          color: 0x3498db, // Blue color
-          timestamp: new Date(item.pubDate).toISOString(),
-          footer: {
-            text: `Posted by ${item.author || 'Subcurrent'}`,
-          },
-        },
-      ],
+      embeds: [embed],
     };
 
     console.log(`Sending notification for "${cleanTitle}"`);

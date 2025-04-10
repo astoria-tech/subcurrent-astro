@@ -27,3 +27,6 @@ pnpm-debug.log*
 # feeds
 src/content/feeds/*.json
 !src/content/feeds/.gitkeep
+
+# Discord state tracking
+.discord-sent-posts.json
