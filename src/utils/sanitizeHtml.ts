@@ -32,9 +32,11 @@ export function sanitizeHtml(htmlContent: string): string {
       const tagEnd = match.slice(match.indexOf(url) + url.length + 1);
       return `${tagStart}href="${url.replace(/["']/g, '')}"${tagEnd}`;
     })
+    // Preserve common entities that should render properly
+    .replace(/&amp;([a-z]+);/gi, '&$1;') // Keep standard named entities
     // General cleanup of escaped quotes
-    .replace(/&quot;/g, '')
-    .replace(/\\"/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/\\"/g, '"')
     .replace(/src="([^"]*)""/g, 'src="$1"')
     .replace(/href="([^"]*)""/g, 'href="$1"');
 

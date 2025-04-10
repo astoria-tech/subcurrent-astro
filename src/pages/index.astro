@@ -21,13 +21,57 @@ function formatDate(dateStr: string) {
   };
 }
 
-// One more sanitization step specifically for image URLs
+// Decode HTML entities in text
+function decodeHtmlEntities(text: string): string {
+  if (!text) return '';
+  
+  const entities: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&nbsp;': ' ',
+    '&copy;': '©',
+    '&reg;': '®',
+    '&trade;': '™',
+    '&hellip;': '…'
+  };
+  
+  return text.replace(/&[\w#]+;/g, entity => {
+    return entities[entity] || entity;
+  });
+}
+
+// Fix image URLs and limit snippet length
 function fixImageUrls(htmlContent: string): string {
   if (!htmlContent) return '';
 
+  // Limit content length to approximately 300 characters
+  // Look for an ending tag near the 300 char mark to avoid breaking HTML
+  const MAX_LENGTH = 300;
+  let truncated = htmlContent;
+
+  if (htmlContent.length > MAX_LENGTH) {
+    const endPos = htmlContent.indexOf('</p>', MAX_LENGTH);
+    if (endPos !== -1 && endPos < MAX_LENGTH * 1.5) {
+      // If we find a paragraph end within a reasonable distance, use it
+      truncated = htmlContent.substring(0, endPos + 4);
+    } else {
+      // Otherwise just take the first paragraph if we can find it
+      const firstParaEnd = htmlContent.indexOf('</p>');
+      if (firstParaEnd !== -1) {
+        truncated = htmlContent.substring(0, firstParaEnd + 4);
+      }
+    }
+  }
+
   // We'll use a direct replacement strategy against the most problematic patterns
   return (
-    htmlContent
+    truncated
       // First, directly replace image tags with problematic URL patterns
       .replace(/<img[^>]*src="([^"]*?)&quot;\/(.*?)"[^>]*>/g, '<img src="$1$2">')
       .replace(/<img[^>]*src="&quot;([^"]*?)(\/|)"[^>]*>/g, '<img src="$1">')
@@ -159,7 +203,7 @@ const groupedPosts = allPosts.reduce(
           {
             Object.entries(groupedPosts).map(([date, posts]) => (
               <section>
-                <h2 class="text-sm uppercase tracking-wider text-content-muted mb-6 sticky top-0 bg-dark-bg/95 backdrop-blur-md py-3 px-4 -mx-4 z-10 border-b border-dark-border/20 shadow-sm">
+                <h2 class="text-sm uppercase tracking-wider font-medium text-content-secondary mb-6 py-3 px-4 -mx-4 date-header">
                   {date}
                 </h2>
                 <div class="space-y-8">
@@ -171,19 +215,23 @@ const groupedPosts = allPosts.reduce(
                       class="block group no-underline"
                     >
                       <article class="group p-4 -mx-4 rounded-lg transition-colors hover:bg-dark-surface relative">
-                        <h3 class="text-lg font-medium mb-2">
+                        <h3 class="text-lg font-medium mb-1">
                           <span class="text-content-primary group-hover:text-accent-primary transition-colors">
-                            {post.title}
+                            {decodeHtmlEntities(post.title)}
                           </span>
                         </h3>
-                        {post.snippet && (
-                          <p
-                            class="text-content-secondary text-sm mb-3 pb-4 line-clamp-3 overflow-hidden"
-                            set:html={fixImageUrls(sanitizeHtml(post.snippet))}
-                          />
-                        )}
+                        <div class="text-content-secondary text-sm mt-1 mb-3">
+                          {post.snippet ? (
+                            <p
+                              class="line-clamp-3 overflow-hidden"
+                              set:html={fixImageUrls(sanitizeHtml(post.snippet))}
+                            />
+                          ) : (
+                            <p class="italic opacity-70">(No description.)</p>
+                          )}
+                        </div>
                         <div class="flex items-center gap-2 text-xs text-content-muted">
-                          <span>{post.author}</span>
+                          <span>{decodeHtmlEntities(post.author)}</span>
                           <span class="w-1 h-1 rounded-full bg-dark-border" />
                           <time datetime={post.pubDate}>{formatDate(post.pubDate).time}</time>
                         </div>
@@ -284,6 +332,48 @@ const groupedPosts = allPosts.reduce(
         text-align: center;
       }
 
+      /* Style code blocks */
+      :global(.sanitized-content pre),
+      :global(.sanitized-content code) {
+        background: theme('colors.dark.surface');
+        border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace !important;
+      }
+
+      :global(.sanitized-content pre) {
+        padding: 0.5rem;
+        margin: 0.25rem 0;
+      }
+
+      :global(.sanitized-content code) {
+        padding: 0.15rem 0.3rem;
+        font-size: 0.9em;
+      }
+
+      /* Make code blocks scrollable horizontally */
+      :global(.sanitized-content pre) {
+        overflow-x: auto;
+        white-space: pre;
+        max-width: 100%;
+      }
+
+      :global(.sanitized-content code:not(pre code)) {
+        white-space: pre;
+        max-width: 100%;
+        overflow-x: auto;
+      }
+
+      /* Date header */
+      .date-header {
+        position: sticky;
+        top: 0;
+        background-color: theme('colors.dark.surface/90');
+        backdrop-filter: blur(8px);
+        border-top: 1px solid theme('colors.accent.muted/30');
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+      
       /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 14px;
