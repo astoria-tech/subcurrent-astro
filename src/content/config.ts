@@ -11,6 +11,7 @@ const feedsCollection = defineCollection({
     author: z.string(),
     feedSource: z.string(), // to track which feed this came from
     lastFetched: z.string().datetime(),
+    imageUrl: z.string().optional(), // URL to the feed item's image
   }),
 });
 

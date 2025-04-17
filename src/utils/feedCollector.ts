@@ -14,6 +14,7 @@ export interface FeedEntry {
   link: string;
   published: string;
   description: string;
+  imageUrl?: string;
 }
 
 /**
@@ -27,6 +28,7 @@ export interface ProcessedEntry {
   author: string;
   feedSource: string;
   lastFetched: string;
+  imageUrl?: string;
 }
 
 import fs from 'node:fs/promises';
@@ -86,10 +88,53 @@ function parseEntry(entry: string, isRSS: boolean): FeedEntry {
       /<(?:description|content|summary)[^>]*>(.*?)<\/(?:description|content|summary)>/s
     );
 
-    return { title, link, published, description };
+    // Extract image URL using various patterns
+    let imageUrl = '';
+
+    // Try media:content tag
+    const mediaContentMatch = entry.match(/<media:content[^>]+url="([^"]+)"[^>]*>/);
+    if (mediaContentMatch && !imageUrl) {
+      imageUrl = mediaContentMatch[1];
+    }
+
+    // Try media:thumbnail
+    const mediaThumbnailMatch = entry.match(/<media:thumbnail[^>]+url="([^"]+)"[^>]*>/);
+    if (mediaThumbnailMatch && !imageUrl) {
+      imageUrl = mediaThumbnailMatch[1];
+    }
+
+    // Try enclosure (podcasts and some blogs)
+    const enclosureMatch = entry.match(
+      /<enclosure[^>]+url="([^"]+)"[^>]+type="image\/[^"]+"[^>]*>/
+    );
+    if (enclosureMatch && !imageUrl) {
+      imageUrl = enclosureMatch[1];
+    }
+
+    // Try image tag directly
+    const imageTagMatch = entry.match(/<image><url>(.*?)<\/url><\/image>/);
+    if (imageTagMatch && !imageUrl) {
+      imageUrl = imageTagMatch[1];
+    }
+
+    // Try itunes:image
+    const itunesImageMatch = entry.match(/<itunes:image[^>]+href="([^"]+)"[^>]*>/);
+    if (itunesImageMatch && !imageUrl) {
+      imageUrl = itunesImageMatch[1];
+    }
+
+    // Try extracting from description only if we can't find it elsewhere
+    if (!imageUrl && description) {
+      const imgMatch = description.match(/<img[^>]+src="([^">]+)"/i);
+      if (imgMatch && imgMatch[1]) {
+        imageUrl = imgMatch[1];
+      }
+    }
+
+    return { title, link, published, description, imageUrl };
   } catch (error) {
     console.error('Error parsing entry:', error);
-    return { title: '', link: '', published: '', description: '' };
+    return { title: '', link: '', published: '', description: '', imageUrl: '' };
   }
 }
 
@@ -190,6 +235,7 @@ export async function getFeedContent(feed: Feed): Promise<ProcessedEntry[]> {
         author: feed.authorName,
         feedSource: feed.url,
         lastFetched: new Date().toISOString(),
+        imageUrl: entry.imageUrl || '',
       };
 
       entries.push(entryData);

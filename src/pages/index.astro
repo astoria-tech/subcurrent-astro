@@ -24,7 +24,7 @@ function formatDate(dateStr: string) {
 // Decode HTML entities in text
 function decodeHtmlEntities(text: string): string {
   if (!text) return '';
-  
+
   const entities: Record<string, string> = {
     '&amp;': '&',
     '&lt;': '<',
@@ -38,10 +38,10 @@ function decodeHtmlEntities(text: string): string {
     '&copy;': '©',
     '&reg;': '®',
     '&trade;': '™',
-    '&hellip;': '…'
+    '&hellip;': '…',
   };
-  
-  return text.replace(/&[\w#]+;/g, entity => {
+
+  return text.replace(/&[\w#]+;/g, (entity) => {
     return entities[entity] || entity;
   });
 }
@@ -220,11 +220,36 @@ const groupedPosts = allPosts.reduce(
                             {decodeHtmlEntities(post.title)}
                           </span>
                         </h3>
+
+                        {/* Render the dedicated image if available */}
+                        {post.imageUrl && (
+                          <div class="mb-3 mt-2">
+                            <img
+                              src={post.imageUrl}
+                              alt={decodeHtmlEntities(post.title)}
+                              class="max-w-full max-h-[200px] rounded-md mx-auto object-contain"
+                            />
+                          </div>
+                        )}
+
                         <div class="text-content-secondary text-sm mt-1 mb-3">
                           {post.snippet ? (
                             <p
                               class="line-clamp-3 overflow-hidden"
-                              set:html={fixImageUrls(sanitizeHtml(post.snippet))}
+                              set:html={fixImageUrls(
+                                sanitizeHtml(
+                                  // Check if snippet already contains this image and remove it to avoid duplication
+                                  post.imageUrl && post.snippet.includes(post.imageUrl)
+                                    ? post.snippet.replace(
+                                        new RegExp(
+                                          `<img[^>]*src=["']${post.imageUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*>`,
+                                          'gi'
+                                        ),
+                                        ''
+                                      )
+                                    : post.snippet
+                                )
+                              )}
                             />
                           ) : (
                             <p class="italic opacity-70">(No description.)</p>
@@ -295,6 +320,21 @@ const groupedPosts = allPosts.reduce(
       main a:focus-visible {
         outline: 2px solid theme('colors.accent.primary');
         border-radius: 8px;
+      }
+
+      /* Style post featured images */
+      article img {
+        display: block;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition:
+          transform 0.2s ease-in-out,
+          box-shadow 0.2s ease-in-out;
+      }
+
+      article:hover img {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       }
 
       /* Ensure proper text color for sanitized HTML content */
@@ -373,7 +413,7 @@ const groupedPosts = allPosts.reduce(
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         z-index: 10;
       }
-      
+
       /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 14px;
