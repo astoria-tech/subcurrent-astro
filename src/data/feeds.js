@@ -23,4 +23,8 @@ export const feeds = [
     url: 'https://www.chrisdeluca.me/feed.xml',
     authorName: 'Chris DeLuca',
   },
+  {
+    url: 'https://www.dviramontes.com/feed.xml',
+    authorName: 'David Viramontes'
+  }
 ];
