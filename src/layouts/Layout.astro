@@ -1,11 +1,65 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  url?: string;
+}
+
+const {
+  title = 'Subcurrent | Astoria Tech Community',
+  description = 'A community-driven content aggregator for the Astoria Tech Meetup - discover the latest posts from NYC developers and tech enthusiasts in Brooklyn and Queens.',
+  image = '/favicon.svg',
+  url = Astro.url.href,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const fullImageUrl = new URL(image, Astro.site).href;
+---
+
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>Astro Basics</title>
+
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <meta
+      name="keywords"
+      content="Astoria Tech community, NYC tech, Brooklyn Queens tech community, developer content aggregator, tech community content hub, NYC developer content"
+    />
+    <meta name="author" content="Astoria Tech Community" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={fullImageUrl} />
+    <meta property="og:site_name" content="Astoria Tech Community" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={fullImageUrl} />
+
+    <!-- Additional SEO -->
+    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="format-detection" content="telephone=no" />
+    <!-- Slot for additional head content -->
+    <slot name="head" />
   </head>
   <body>
     <slot />
