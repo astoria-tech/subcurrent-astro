@@ -1,0 +1,26 @@
+# robots.txt for Subcurrent - Astoria Tech Community Content Hub
+
+User-agent: *
+Allow: /
+
+# Encourage indexing of key pages
+Allow: /
+Allow: /rss.xml
+
+# Sitemap location
+Sitemap: https://astoria-tech.github.io/subcurrent-astro/sitemap-index.xml
+Sitemap: https://astoria-tech.github.io/subcurrent-astro/sitemap-0.xml
+
+# Crawl delay to be respectful to servers
+Crawl-delay: 1
+
+# Additional directives for better SEO
+# Allow common SEO bot user agents
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
