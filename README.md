@@ -148,6 +148,9 @@ Each feed entry contains:
 # Install dependencies
 npm install
 
+# Refresh the rss feed list if you're running it for the first time
+npm run fetch
+
 # Start development server
 npm run dev
 
