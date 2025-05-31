@@ -8,7 +8,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "clean": "rm -rf src/content/feeds/*",
-    "fetch": "astro sync && NODE_NO_WARNINGS=1 node --loader ts-node/esm src/utils/fetchFeeds.ts",
+    "fetch": "astro sync && NODE_NO_WARNINGS=1 node --loader ts-node/esm --experimental-specifier-resolution=node src/utils/fetchFeeds.ts",
     "refresh": "npm run clean && npm run fetch",
     "notify-discord": "NODE_NO_WARNINGS=1 node --loader ts-node/esm src/utils/discordNotifier.ts",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.astro",
