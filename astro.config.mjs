@@ -20,4 +20,9 @@ export default defineConfig({
       filter: (page) => !page.includes('/admin/') && !page.includes('/private/'),
     }),
   ],
+  vite: {
+    optimizeDeps: {
+      include: ['**/*.ts'],
+    },
+  },
 });

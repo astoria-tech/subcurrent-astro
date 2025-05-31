@@ -6,16 +6,15 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "target": "ESNext",
-    "module": "Node16",
-    "moduleResolution": "node16",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowJs": true
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true
   },
   "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "esm": true
   }
 }
