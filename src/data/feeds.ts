@@ -24,4 +24,12 @@ export const feeds: Feed[] = [
     url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCjkzTpA7V8AfJS9UKLKFZxA',
     authorName: 'meremortaldev',
   },
+  {
+    url: 'https://www.chrisdeluca.me/feed.xml',
+    authorName: 'Chris DeLuca',
+  },
+  {
+    url: 'https://www.dviramontes.com/feed.xml',
+    authorName: 'David Viramontes',
+  },
 ];

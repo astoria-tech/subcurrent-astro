@@ -285,6 +285,9 @@ const structuredData = [organizationSchema, collectionPageSchema];
                               src={post.imageUrl}
                               alt={decodeHtmlEntities(post.title)}
                               class="max-w-full max-h-[200px] rounded-md mx-auto object-contain"
+                              onerror="this.style.display='none'"
+                              loading="lazy"
+                              decoding="async"
                             />
                           </div>
                         )}

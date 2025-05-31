@@ -72,6 +72,36 @@ function extractContent(entry: string, pattern: RegExp): string {
   return match ? cleanXMLContent(match[1]) : '';
 }
 
+// Helper function to validate image URLs
+function isValidImageUrl(url: string): boolean {
+  if (!url) return false;
+
+  try {
+    const parsedUrl = new URL(url);
+    const validProtocols = ['http:', 'https:'];
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.avif'];
+
+    // Check protocol
+    if (!validProtocols.includes(parsedUrl.protocol)) {
+      return false;
+    }
+
+    // Check file extension
+    const hasValidExtension = validExtensions.some((ext) =>
+      parsedUrl.pathname.toLowerCase().endsWith(ext)
+    );
+
+    // If no extension, check content-type in path
+    const hasImageContentType =
+      parsedUrl.pathname.toLowerCase().includes('/image/') ||
+      parsedUrl.pathname.toLowerCase().includes('/images/');
+
+    return hasValidExtension || hasImageContentType;
+  } catch {
+    return false;
+  }
+}
+
 // Helper function to parse an XML entry
 function parseEntry(entry: string, isRSS: boolean): FeedEntry {
   try {
@@ -131,7 +161,13 @@ function parseEntry(entry: string, isRSS: boolean): FeedEntry {
       }
     }
 
-    return { title, link, published, description, imageUrl };
+    return {
+      title,
+      link,
+      published,
+      description,
+      imageUrl: isValidImageUrl(imageUrl) ? imageUrl : '',
+    };
   } catch (error) {
     console.error('Error parsing entry:', error);
     return { title: '', link: '', published: '', description: '', imageUrl: '' };
