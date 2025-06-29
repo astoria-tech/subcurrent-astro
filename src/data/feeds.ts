@@ -32,4 +32,8 @@ export const feeds: Feed[] = [
     url: 'https://www.dviramontes.com/feed.xml',
     authorName: 'David Viramontes',
   },
+  {
+    url: 'https://peter.direct/rss.xml',
+    authorName: 'Peter Valdez',
+  },
 ];
