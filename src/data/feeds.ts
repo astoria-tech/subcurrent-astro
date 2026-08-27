@@ -36,4 +36,8 @@ export const feeds: Feed[] = [
     url: 'https://peter.direct/rss.xml',
     authorName: 'Peter Valdez',
   },
+  {
+    "url": "https://grieve-smith.com/blog/feed/",
+    "authorName": "Angus Andrea Grieve-Smith"
+}
 ];
