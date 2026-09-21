@@ -33,7 +33,7 @@ export const feeds: Feed[] = [
     authorName: 'David Viramontes',
   },
   {
-    url: 'https://peter.direct/rss.xml',
+    url: 'https://cloudy.nyc/rss.xml',
     authorName: 'Peter Valdez',
   },
   {
