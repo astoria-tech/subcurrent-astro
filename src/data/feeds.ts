@@ -37,7 +37,11 @@ export const feeds: Feed[] = [
     authorName: 'Peter Valdez',
   },
   {
-    "url": "https://grieve-smith.com/blog/feed/",
-    "authorName": "Angus Andrea Grieve-Smith"
-}
+    url: 'https://grieve-smith.com/blog/feed/',
+    authorName: 'Angus Andrea Grieve-Smith',
+  },
+  {
+    url: 'https://blog.quigley.codes/rss.xml',
+    authorName: 'James Quigley',
+  },
 ];
